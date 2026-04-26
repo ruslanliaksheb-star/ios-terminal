@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>terminal</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0f14;
+      --panel: #111821;
+      --ink: #e6edf3;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --border: #263445;
+    }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: radial-gradient(circle at top right, #132034 0%, var(--bg) 60%);
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+    .wrap {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      padding: max(10px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom)) 12px;
+      box-sizing: border-box;
+    }
+    .title {
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+    textarea, pre {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 12px;
+      resize: none;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    textarea {
+      height: 38vh;
+      outline: none;
+    }
+    pre {
+      height: 100%;
+      overflow: auto;
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #1a2532;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button.primary {
+      background: #16321f;
+      border-color: #236b38;
+      color: #c6f6d5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">terminal | Python (Pyodide)</div>
+    <textarea id="code">print("Hello from terminal")</textarea>
+    <pre id="out">Loading Python runtime...</pre>
+    <div class="actions">
+      <button id="clear">Clear</button>
+      <button id="run" class="primary">Run</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+  <script>
+    const outEl = document.getElementById("out");
+    const codeEl = document.getElementById("code");
+    const runEl = document.getElementById("run");
+    const clearEl = document.getElementById("clear");
+
+    function write(line) {
+      outEl.textContent += line + "\n";
+      outEl.scrollTop = outEl.scrollHeight;
+    }
+
+    let pyodide;
+    async function boot() {
+      pyodide = await loadPyodide();
+      pyodide.setStdout({ batched: (s) => write(s) });
+      pyodide.setStderr({ batched: (s) => write(s) });
+      outEl.textContent = "Python ready.\n";
+    }
+
+    runEl.addEventListener("click", async () => {
+      if (!pyodide) return;
+      write(">>> running");
+      try {
+        await pyodide.runPythonAsync(codeEl.value);
+      } catch (e) {
+        write(String(e));
+      }
+    });
+
+    clearEl.addEventListener("click", () => {
+      outEl.textContent = "";
+    });
+
+    boot().catch((e) => {
+      outEl.textContent = "Failed to load Python runtime.\n" + String(e);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+name: terminal
+options:
+  bundleIdPrefix: com.bobr
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: 5.9
+    PRODUCT_BUNDLE_IDENTIFIER: com.bobr.terminalpython
+targets:
+  terminal:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: terminal/Sources
+      - path: terminal/Resources
+        type: folder
+    settings:
+      base:
+        INFOPLIST_FILE: terminal/Support/Info.plist
+        PRODUCT_NAME: terminal
+        MARKETING_VERSION: 1.0
+        CURRENT_PROJECT_VERSION: 1
+        TARGETED_DEVICE_FAMILY: "1,2"

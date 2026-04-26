@@ -1,0 +1,49 @@
+name: Build terminal IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ipa:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: terminal-ios
+        run: xcodegen generate --spec project.yml
+
+      - name: Build unsigned app for iPhoneOS
+        working-directory: terminal-ios
+        run: |
+          xcodebuild \
+            -project terminal.xcodeproj \
+            -scheme terminal \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination generic/platform=iOS \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned IPA
+        working-directory: terminal-ios
+        run: |
+          APP_PATH="build/Release-iphoneos/terminal.app"
+          if [ ! -d "$APP_PATH" ]; then
+            APP_PATH="$(find ~/Library/Developer/Xcode/DerivedData -type d -path "*/Build/Products/Release-iphoneos/terminal.app" | head -n1)"
+          fi
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r terminal-unsigned.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terminal-unsigned-ipa
+          path: terminal-ios/terminal-unsigned.ipa
