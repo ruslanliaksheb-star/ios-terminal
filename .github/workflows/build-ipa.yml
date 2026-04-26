@@ -13,8 +13,9 @@ jobs:
       - name: Install XcodeGen
         run: |
           set -euxo pipefail
-          brew update
-          brew install xcodegen || brew upgrade xcodegen
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
           xcodegen --version
 
       - name: Debug workspace
